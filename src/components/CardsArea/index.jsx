@@ -1,29 +1,37 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import SkipCard from './SkipCard';
 import SearchInput from './SearchInput';
-import FilterButtonGroup from './FilterButtonGroup'
+import FilterButtonGroup from './FilterButtonGroup';
 import SkeletonCard from './SkeletonCard';
 import skipImages from '../../utils/skipImages';
 
-const CardArea = ({ onSelectSkip }) => {
+const CardArea = ({ onSelectSkip, postcode = 'NR32', area = 'Lowestoft' }) => {
   const [skips, setSkips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
 
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
-    fetch('https://app.wewantwaste.co.uk/api/skips/by-location?postcode=NR32&area=Lowestoft')
-      .then((res) => res.json())
-      .then((data) => {
-        setSkips(data);
+    const fetchSkips = async () => {
+      try {
+        const response = await axios.get(
+          `${baseUrl}/skips/by-location`,
+          { params: { postcode, area } }
+        );
+        setSkips(response.data);
+      } catch (error) {
+        console.error('Failed to fetch skips:', error);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch skips:', err);
-        setLoading(false);
-      });
-  }, []);
+      }
+    };
+
+    fetchSkips();
+  }, [baseUrl, postcode, area]);
 
   const filterOptions = [
     { id: 'all', label: 'All Skips' },
@@ -33,13 +41,19 @@ const CardArea = ({ onSelectSkip }) => {
   ];
 
   const filteredSkips = skips
-    .filter((skip) => `${skip.size}`.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter((skip) =>
+      `${skip.size}`.toLowerCase().includes(searchTerm.toLowerCase())
+    )
     .filter((skip) => {
       switch (activeFilter) {
-        case 'road': return skip.allowed_on_road === true;
-        case 'offroad': return skip.allowed_on_road === false;
-        case 'heavy': return skip.allows_heavy_waste === true;
-        default: return true;
+        case 'road':
+          return skip.allowed_on_road === true;
+        case 'offroad':
+          return skip.allowed_on_road === false;
+        case 'heavy':
+          return skip.allows_heavy_waste === true;
+        default:
+          return true;
       }
     });
 
@@ -70,14 +84,14 @@ const CardArea = ({ onSelectSkip }) => {
 
       <div className="flex flex-wrap justify-center gap-3 mb-7 px-2">
         <FilterButtonGroup
-  filters={filterOptions}
-  activeFilter={activeFilter}
-  onFilterChange={(filterId) => {
-    setActiveFilter(filterId);
-    setSelectedIndex(null);
-    onSelectSkip(null);
-  }}
-/>
+          filters={filterOptions}
+          activeFilter={activeFilter}
+          onFilterChange={(filterId) => {
+            setActiveFilter(filterId);
+            setSelectedIndex(null);
+            onSelectSkip(null);
+          }}
+        />
       </div>
 
       <div className="grid grid-cols-1 mt-8 sm:grid-cols-2 mb-32 lg:grid-cols-2 gap-4 mx-auto max-w-3xl px-1">
@@ -94,7 +108,9 @@ const CardArea = ({ onSelectSkip }) => {
             />
           ))
         ) : (
-          <p className="text-gray-500 col-span-full text-center mt-10">No skips found.</p>
+          <p className="text-gray-500 col-span-full text-center mt-10">
+            No skips found.
+          </p>
         )}
       </div>
     </div>

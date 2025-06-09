@@ -91,14 +91,6 @@ skipImages.js # Maps skip sizes to their respective image assets
 
 ---
 
-## ✅ To Do
-
-- Connect the "Continue" button to the next step (e.g. delivery or payment)
-- Add error handling/loading states for skip data
-- Enhance accessibility (keyboard nav, ARIA roles)
-- Swipe-down drawer close on mobile
-
----
 
 ## 🧾 Notes
 
